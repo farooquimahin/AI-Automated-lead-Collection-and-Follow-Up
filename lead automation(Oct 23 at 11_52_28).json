@@ -1,0 +1,699 @@
+{
+  "updatedAt": "2026-10-23T06:23:12.423Z",
+  "createdAt": "2026-10-23T06:19:49.262Z",
+  "id": "HDEPB0PHGXHEfWwV",
+  "name": "lead automation",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyWeek"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1RINvnVXOSaN-MuHJkA677d_xR_DNYPUG0In_1h_Tz74/edit?resourcekey=&gid=1495334714#gid=1495334714",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1RINvnVXOSaN-MuHJkA677d_xR_DNYPUG0In_1h_Tz74/edit?resourcekey=&gid=1495334714#gid=1495334714",
+          "mode": "url"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "2f99643d-9839-4d34-b444-9dddaf16b3bb",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "ggxzDMRt074iGBGs",
+          "name": "Google Sheets Trigger account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Google Sheets Trigger').item.json[\"Email\"] }}",
+        "subject": "={{ JSON.parse($json.content.parts[0].text).subject }}",
+        "emailType": "text",
+        "message": "={{ JSON.parse($json.content.parts[0].text).body }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        576,
+        0
+      ],
+      "id": "17a21ac9-0652-4550-a3e0-940302243d37",
+      "name": "Send a message",
+      "webhookId": "ffd72de0-9bcb-44d9-bc38-474951bb5aa8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Nve5y2PE764rhstP",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.1-flash-lite",
+          "mode": "list",
+          "cachedResultName": "Gemini 3.1 Flash Lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are a polite, effective Business Development Associate composing short, tailored email follow-ups to website leads.\n\nRules:\n\n    Tone: Warm, professional, human.\n\n    Directness: Mention specific inquiry details naturally.\n\n    Goal: Open a helpful dialogue—no aggressive selling.\n\n    Length: Under 100 words.\n\n    Output format: Return strictly a raw JSON object with key-value pairs \"subject\" and \"body\". Do not include markdown fences or additional commentary.",
+              "role": "model"
+            },
+            {
+              "content": "=Draft a professional, personalized follow-up email for the following lead:\n\n- Lead Name: {{ $json[\"Name\"] }}\n- Organization: {{ $json[\"Company/organisation\"] }}\n- Topic of Interest: {{ $json[\"Service/ Topic of interest\"] }}\n- Detailed Inquiry: {{ $json[\"INQUIRY\"] }}\n\nRequirements:\n- Address {{ $json[\"Name\"] }} directly.\n- Tailor the email to their interest in {{ $json[\"Service/ Topic of interest\"] }} and their note: \"{{ $json[\"INQUIRY\"] }}\".\n- Return ONLY a JSON object with two key fields: \"subject\" and \"body\"."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "a88527b2-d953-4f10-9088-a1f8acf0b149",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "=https://docs.google.com/spreadsheets/d/1RINvnVXOSaN-MuHJkA677d_xR_DNYPUG0In_1h_Tz74/edit?resourcekey=&gid=1495334714#gid=1495334714",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "=https://docs.google.com/spreadsheets/d/1RINvnVXOSaN-MuHJkA677d_xR_DNYPUG0In_1h_Tz74/edit?resourcekey=&gid=1495334714#gid=1495334714",
+          "mode": "url"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Dates Followed up": "={{ $now.toFormat('yyyy-MM-dd HH:mm:ss') }}",
+            "Email": "={{ $node[\"Google Sheets Trigger\"].json[\"Email\"] }}",
+            "Status": "=Email Sent",
+            "AI Draft Subject": "={{ JSON.parse($('Message a model').item.json.content.parts[0].text).subject }}"
+          },
+          "matchingColumns": [
+            "Email"
+          ],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Company/organisation",
+              "displayName": "Company/organisation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Service/ Topic of interest",
+              "displayName": "Service/ Topic of interest",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "INQUIRY",
+              "displayName": "INQUIRY",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "AI Draft Subject",
+              "displayName": "AI Draft Subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Dates Followed up",
+              "displayName": "Dates Followed up",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        800,
+        0
+      ],
+      "id": "f93cf822-9e98-4d13-a865-5758a454e05a",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "vFss5OR4kYeVd8B1",
+          "name": "Google Sheets account 2"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "fb6a10b0-0240-4c46-9535-bc13c6d7358a",
+  "activeVersionId": "fb6a10b0-0240-4c46-9535-bc13c6d7358a",
+  "versionCounter": 6,
+  "triggerCount": 1,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "parentFolder": null,
+  "activeVersion": {
+    "updatedAt": "2026-10-23T06:22:55.000Z",
+    "createdAt": "2026-10-23T06:22:28.606Z",
+    "versionId": "fb6a10b0-0240-4c46-9535-bc13c6d7358a",
+    "workflowId": "HDEPB0PHGXHEfWwV",
+    "nodes": [
+      {
+        "parameters": {
+          "pollTimes": {
+            "item": [
+              {
+                "mode": "everyWeek"
+              }
+            ]
+          },
+          "documentId": {
+            "__rl": true,
+            "value": "https://docs.google.com/spreadsheets/d/1RINvnVXOSaN-MuHJkA677d_xR_DNYPUG0In_1h_Tz74/edit?resourcekey=&gid=1495334714#gid=1495334714",
+            "mode": "url"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "https://docs.google.com/spreadsheets/d/1RINvnVXOSaN-MuHJkA677d_xR_DNYPUG0In_1h_Tz74/edit?resourcekey=&gid=1495334714#gid=1495334714",
+            "mode": "url"
+          },
+          "event": "rowAdded",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheetsTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          0
+        ],
+        "id": "2f99643d-9839-4d34-b444-9dddaf16b3bb",
+        "name": "Google Sheets Trigger",
+        "credentials": {
+          "googleSheetsTriggerOAuth2Api": {
+            "id": "ggxzDMRt074iGBGs",
+            "name": "Google Sheets Trigger account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "sendTo": "={{ $('Google Sheets Trigger').item.json[\"Email\"] }}",
+          "subject": "={{ JSON.parse($json.content.parts[0].text).subject }}",
+          "emailType": "text",
+          "message": "={{ JSON.parse($json.content.parts[0].text).body }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.2,
+        "position": [
+          576,
+          0
+        ],
+        "id": "17a21ac9-0652-4550-a3e0-940302243d37",
+        "name": "Send a message",
+        "webhookId": "ffd72de0-9bcb-44d9-bc38-474951bb5aa8",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "Nve5y2PE764rhstP",
+            "name": "Gmail account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "models/gemini-3.1-flash-lite",
+            "mode": "list",
+            "cachedResultName": "Gemini 3.1 Flash Lite"
+          },
+          "messages": {
+            "values": [
+              {
+                "content": "You are a polite, effective Business Development Associate composing short, tailored email follow-ups to website leads.\n\nRules:\n\n    Tone: Warm, professional, human.\n\n    Directness: Mention specific inquiry details naturally.\n\n    Goal: Open a helpful dialogue—no aggressive selling.\n\n    Length: Under 100 words.\n\n    Output format: Return strictly a raw JSON object with key-value pairs \"subject\" and \"body\". Do not include markdown fences or additional commentary.",
+                "role": "model"
+              },
+              {
+                "content": "=Draft a professional, personalized follow-up email for the following lead:\n\n- Lead Name: {{ $json[\"Name\"] }}\n- Organization: {{ $json[\"Company/organisation\"] }}\n- Topic of Interest: {{ $json[\"Service/ Topic of interest\"] }}\n- Detailed Inquiry: {{ $json[\"INQUIRY\"] }}\n\nRequirements:\n- Address {{ $json[\"Name\"] }} directly.\n- Tailor the email to their interest in {{ $json[\"Service/ Topic of interest\"] }} and their note: \"{{ $json[\"INQUIRY\"] }}\".\n- Return ONLY a JSON object with two key fields: \"subject\" and \"body\"."
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.googleGemini",
+        "typeVersion": 1.2,
+        "position": [
+          224,
+          0
+        ],
+        "id": "a88527b2-d953-4f10-9088-a1f8acf0b149",
+        "name": "Message a model",
+        "credentials": {
+          "googlePalmApi": {
+            "id": null,
+            "name": "",
+            "__aiGatewayManaged": true
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentId": {
+            "__rl": true,
+            "value": "=https://docs.google.com/spreadsheets/d/1RINvnVXOSaN-MuHJkA677d_xR_DNYPUG0In_1h_Tz74/edit?resourcekey=&gid=1495334714#gid=1495334714",
+            "mode": "url"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "=https://docs.google.com/spreadsheets/d/1RINvnVXOSaN-MuHJkA677d_xR_DNYPUG0In_1h_Tz74/edit?resourcekey=&gid=1495334714#gid=1495334714",
+            "mode": "url"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Dates Followed up": "={{ $now.toFormat('yyyy-MM-dd HH:mm:ss') }}",
+              "Email": "={{ $node[\"Google Sheets Trigger\"].json[\"Email\"] }}",
+              "Status": "=Email Sent",
+              "AI Draft Subject": "={{ JSON.parse($('Message a model').item.json.content.parts[0].text).subject }}"
+            },
+            "matchingColumns": [
+              "Email"
+            ],
+            "schema": [
+              {
+                "id": "Timestamp",
+                "displayName": "Timestamp",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Name",
+                "displayName": "Name",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Email",
+                "displayName": "Email",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Company/organisation",
+                "displayName": "Company/organisation",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Service/ Topic of interest",
+                "displayName": "Service/ Topic of interest",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "INQUIRY",
+                "displayName": "INQUIRY",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Status",
+                "displayName": "Status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "AI Draft Subject",
+                "displayName": "AI Draft Subject",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Dates Followed up",
+                "displayName": "Dates Followed up",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "row_number",
+                "displayName": "row_number",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "number",
+                "canBeUsedToMatch": true,
+                "readOnly": true,
+                "removed": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          800,
+          0
+        ],
+        "id": "f93cf822-9e98-4d13-a865-5758a454e05a",
+        "name": "Update row in sheet",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "vFss5OR4kYeVd8B1",
+            "name": "Google Sheets account 2"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Google Sheets Trigger": {
+        "main": [
+          [
+            {
+              "node": "Message a model",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Message a model": {
+        "main": [
+          [
+            {
+              "node": "Send a message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send a message": {
+        "main": [
+          [
+            {
+              "node": "Update row in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Mahin Farooqui",
+    "name": "lead automation",
+    "description": "",
+    "autosaved": true,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-10-23T06:23:12.508Z",
+        "id": 6,
+        "workflowId": "HDEPB0PHGXHEfWwV",
+        "versionId": "fb6a10b0-0240-4c46-9535-bc13c6d7358a",
+        "event": "activated",
+        "userId": "ab85644f-bcf0-41b0-b825-ddecdf011dc1"
+      }
+    ]
+  },
+  "homeProject": {
+    "id": "WzCNB9f0bpi1iPFS",
+    "type": "team",
+    "name": "My project",
+    "icon": {
+      "type": "icon",
+      "value": "layers"
+    }
+  },
+  "sharedWithProjects": [],
+  "usedCredentials": [
+    {
+      "id": "Nve5y2PE764rhstP",
+      "name": "Gmail account 2",
+      "type": "gmailOAuth2",
+      "currentUserCanUse": true,
+      "homeProject": {
+        "id": "WzCNB9f0bpi1iPFS",
+        "type": "team",
+        "name": "My project",
+        "icon": {
+          "type": "icon",
+          "value": "layers"
+        }
+      },
+      "sharedWithProjects": []
+    },
+    {
+      "id": "ggxzDMRt074iGBGs",
+      "name": "Google Sheets Trigger account 2",
+      "type": "googleSheetsTriggerOAuth2Api",
+      "currentUserCanUse": true,
+      "homeProject": {
+        "id": "WzCNB9f0bpi1iPFS",
+        "type": "team",
+        "name": "My project",
+        "icon": {
+          "type": "icon",
+          "value": "layers"
+        }
+      },
+      "sharedWithProjects": []
+    },
+    {
+      "id": "vFss5OR4kYeVd8B1",
+      "name": "Google Sheets account 2",
+      "type": "googleSheetsOAuth2Api",
+      "currentUserCanUse": true,
+      "homeProject": {
+        "id": "WzCNB9f0bpi1iPFS",
+        "type": "team",
+        "name": "My project",
+        "icon": {
+          "type": "icon",
+          "value": "layers"
+        }
+      },
+      "sharedWithProjects": []
+    }
+  ],
+  "scopes": [
+    "execution:delete",
+    "execution:list",
+    "execution:read",
+    "execution:reveal",
+    "workflow:create",
+    "workflow:delete",
+    "workflow:disableRedaction",
+    "workflow:enableRedaction",
+    "workflow:execute",
+    "workflow:execute-chat",
+    "workflow:export",
+    "workflow:import",
+    "workflow:list",
+    "workflow:move",
+    "workflow:publish",
+    "workflow:read",
+    "workflow:share",
+    "workflow:unpublish",
+    "workflow:unshare",
+    "workflow:update"
+  ],
+  "checksum": "b83db34f49fd1c4384ca5dfd0f95b46388d5a6a7a7868a38cdaa88c6704ea379"
+}
